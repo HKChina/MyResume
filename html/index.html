@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<canvas id="game" width="600" height="400"></canvas>
+
+<script>
+
+    const ws = new WebSocket("ws://localhost:3000");
+
+    let myId = null;
+    let players = {};
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    ws.onmessage = function(event){
+
+        const data = JSON.parse(event.data);
+
+        if(data.type === "init"){
+            myId = data.id;
+            players = data.players;
+        }
+
+        if(data.type === "update"){
+            players = data.players;
+        }
+
+    };
+
+    document.addEventListener("keydown", function(e){
+
+        if(!players[myId]) return;
+
+        let p = players[myId];
+
+        if(e.key === "w") p.y -= 5;
+        if(e.key === "s") p.y += 5;
+        if(e.key === "a") p.x -= 5;
+        if(e.key === "d") p.x += 5;
+
+        ws.send(JSON.stringify({
+            type:"move",
+            x:p.x,
+            y:p.y
+        }));
+
+    });
+
+    function gameLoop(){
+
+        ctx.clearRect(0,0,600,400);
+
+        for(let id in players){
+
+            let p = players[id];
+
+            ctx.fillStyle = id === myId ? "red":"blue";
+
+            ctx.fillRect(p.x,p.y,30,30);
+        }
+
+        requestAnimationFrame(gameLoop);
+    }
+    gameLoop();
+
+</script>
+<h1>fuck you</h1>
+</body>
+</html>
